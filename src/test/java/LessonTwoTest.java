@@ -6,13 +6,12 @@ import io.restassured.response.ResponseBody;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 
-public class Lesson2Test {
+public class LessonTwoTest {
   private final String app = "https://playground.learnqa.ru/api";
 
   @Test
