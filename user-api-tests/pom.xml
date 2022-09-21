@@ -1,19 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>api-test-example-restassured</artifactId>
+    <artifactId>user-api-tests</artifactId>
     <version>1.0-SNAPSHOT</version>
-
-    <modules>
-        <module>user-api-tests</module>
-    </modules>
-
-    <name>api-test-example-restassured</name>
 
     <properties>
         <slf4j.version>2.0.1</slf4j.version>
@@ -94,5 +87,5 @@
             <version>${allure.version}</version>
         </dependency>
     </dependencies>
-    <packaging>pom</packaging>
+    
 </project>
