@@ -1,7 +1,6 @@
 package ru.learnqa.userAPI.tests;
 
 import io.restassured.RestAssured;
-import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,9 +12,6 @@ import ru.learnqa.userAPI.lib.BaseTestCase;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserAuthTest extends BaseTestCase {
 
@@ -51,14 +47,13 @@ public class UserAuthTest extends BaseTestCase {
             .get(baseUrl + "user/auth")
             .andReturn();
 
-    Assertions.assertJsonByName(responseCheckAuth, "user_id", userIdOnAuth);
+    Assertions.assertJsonByName(responseCheckAuth, "user_id", this.userIdOnAuth);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"cookie", "headers"})
   public void testNegativeAuthUser(String condition) {
-    RequestSpecification spec = RestAssured
-            .given();
+    RequestSpecification spec = RestAssured.given();
     spec.baseUri(baseUrl + "user/auth");
 
     if (condition.equals("cookie")) {
@@ -66,7 +61,7 @@ public class UserAuthTest extends BaseTestCase {
     } else if (condition.equals("headers")) {
       spec.header("x-csrf-token", authHeader);
     } else {
-      throw new IllegalArgumentException("Condition value is: " + condition);
+      throw new IllegalArgumentException("Condition value is unknown: " + condition);
 
     }
     Response responseForCheck = spec.get().andReturn();
