@@ -3,7 +3,6 @@ package ru.learnqa.userAPI.tests;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
-import ru.learnqa.userAPI.lib.Assertions;
 import ru.learnqa.userAPI.lib.BaseTestCase;
 
 
@@ -12,6 +11,7 @@ import java.util.Map;
 
 import static ru.learnqa.userAPI.lib.Assertions.*;
 import static ru.learnqa.userAPI.lib.DataGenerator.getRandomEmail;
+import static ru.learnqa.userAPI.lib.DataGenerator.getRegistrationData;
 
 public class UserRegisterTest extends BaseTestCase {
 
@@ -21,10 +21,8 @@ public class UserRegisterTest extends BaseTestCase {
 
     Map<String, String> userData = new HashMap<>();
     userData.put("email", email);
-    userData.put("password", "123");
-    userData.put("username", "learnQA");
-    userData.put("firstName", "learnQA");
-    userData.put("lastName", "learnQA");
+    userData = getRegistrationData(userData);
+
 
     Response responseCreateAuth = RestAssured
             .given()
@@ -38,7 +36,20 @@ public class UserRegisterTest extends BaseTestCase {
 
   @Test
   public void testCreateUserSuccess() {
-    String email = getRandomEmail();
+ Map<String, String> userData = getRegistrationData();
+
+    Response responseCreateAuth = RestAssured
+            .given()
+            .body(userData)
+            .post("https://playground.learnqa.ru/api/user")
+            .andReturn();
+    assertResponseStatusCodeEquals(responseCreateAuth, 200);
+    assertJsonHasField(responseCreateAuth, "id");
+  }
+
+  @Test
+  public void testCreateUserEmailWithoutAt() {
+    String email = "someemailexample.com";
 
     Map<String, String> userData = new HashMap<>();
     userData.put("email", email);
@@ -52,10 +63,11 @@ public class UserRegisterTest extends BaseTestCase {
             .body(userData)
             .post("https://playground.learnqa.ru/api/user")
             .andReturn();
-    assertResponseStatusCodeEquals(responseCreateAuth, 200);
-    assertJsonHasKey(responseCreateAuth, "id");
-  }
+    assertResponseTextEquals(responseCreateAuth, "Invalid email format");
+    assertResponseStatusCodeEquals(responseCreateAuth, 400);
 
+
+  }
 
 
 }
