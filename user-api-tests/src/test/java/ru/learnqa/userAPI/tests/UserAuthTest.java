@@ -25,7 +25,6 @@ public class UserAuthTest extends BaseTestCase {
   String authCookie;
   String authHeader;
   int userIdOnAuth;
-  String baseUrl = "https://playground.learnqa.ru/api/";
   private final ApiCoreRequests apiCoreRequests = new ApiCoreRequests();
 
   @BeforeEach
@@ -35,7 +34,7 @@ public class UserAuthTest extends BaseTestCase {
     authData.put("password", "1234");
 
     Response responseGetAuth = apiCoreRequests
-            .makePostRequest(baseUrl + "user/login", authData);
+            .makePostRequest(LOGIN_URL, authData);
 
     authCookie = getCookie(responseGetAuth,"auth_sid");
     authHeader = getHeader(responseGetAuth, "x-csrf-token");
@@ -48,7 +47,7 @@ public class UserAuthTest extends BaseTestCase {
   public void testAuthUser() {
 
     Response responseCheckAuth = apiCoreRequests
-            .makeGetRequest(baseUrl + "user/auth", this.authHeader, this.authCookie);
+            .makeGetRequestWithTokenAndCookie(AUTH_URL, this.authHeader, this.authCookie);
 
     assertJsonByName(responseCheckAuth, "user_id", this.userIdOnAuth);
   }
@@ -60,10 +59,10 @@ public class UserAuthTest extends BaseTestCase {
   public void testNegativeAuthUser(String condition) {
 
     if (condition.equals("cookie")) {
-      Response responseForCheck = apiCoreRequests.makeGetRequestWithCookie(baseUrl + "user/auth", authCookie);
+      Response responseForCheck = apiCoreRequests.makeGetRequestWithCookie(AUTH_URL, authCookie);
       assertJsonByName(responseForCheck, "user_id", 0);
     } else if (condition.equals("headers")) {
-      Response responseForCheck = apiCoreRequests.makeGetRequestWithToken(baseUrl + "user/auth", authHeader);
+      Response responseForCheck = apiCoreRequests.makeGetRequestWithToken(AUTH_URL, authHeader);
       assertJsonByName(responseForCheck, "user_id", 0);
     } else {
       throw new IllegalArgumentException("Condition value is unknown: " + condition);

@@ -5,6 +5,7 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.restassured.response.Response;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,8 +23,6 @@ import static ru.learnqa.userAPI.lib.DataGenerator.getRegistrationData;
 @Epic("User registration tests")
 @Feature("Registration")
 public class UserRegisterTest extends BaseTestCase {
-  private final ApiCoreRequests apiCoreRequests = new ApiCoreRequests();
-  String url = "https://playground.learnqa.ru/api/user";
 
   @Test
   @Description("Testing for impossibility of creating new user with existing email")
@@ -35,7 +34,7 @@ public class UserRegisterTest extends BaseTestCase {
     userData.put("email", existingEmail);
     userData = getRegistrationData(userData);
 
-    Response responseCreateAuth = apiCoreRequests.makePostRequest(url, userData);
+    Response responseCreateAuth = apiCoreRequests.makePostRequest(USER_URL, userData);
     assertResponseTextEquals(responseCreateAuth, "Users with email '" + existingEmail + "' already exists");
     assertResponseStatusCodeEquals(responseCreateAuth, 400);
   }
@@ -45,7 +44,7 @@ public class UserRegisterTest extends BaseTestCase {
   @DisplayName("User creation success")
   public void testCreateUserSuccess() {
     Map<String, String> userData = getRegistrationData();
-    Response responseCreateAuth = apiCoreRequests.makePostRequest(url, userData);
+    Response responseCreateAuth = apiCoreRequests.makePostRequest(USER_URL, userData);
     assertResponseStatusCodeEquals(responseCreateAuth, 200);
     assertJsonHasField(responseCreateAuth, "id");
   }
@@ -60,7 +59,7 @@ public class UserRegisterTest extends BaseTestCase {
     userData = getRegistrationData(userData);
 
     Response responseCreateAuth = apiCoreRequests
-            .makePostRequest(url, userData);
+            .makePostRequest(USER_URL, userData);
     assertResponseTextEquals(responseCreateAuth, "Invalid email format");
     assertResponseStatusCodeEquals(responseCreateAuth, 400);
  }
@@ -75,7 +74,7 @@ public class UserRegisterTest extends BaseTestCase {
     userData.remove(key);
 
     Response responseCreateAuth = apiCoreRequests
-            .makePostRequest(url, userData);
+            .makePostRequest(USER_URL, userData);
     assertResponseStatusCodeEquals(responseCreateAuth,400);
     assertResponseTextEquals(responseCreateAuth, "The following required params are missed: " + key);
 
@@ -90,7 +89,7 @@ public class UserRegisterTest extends BaseTestCase {
     userData.put("username", shortUserName);
     userData = getRegistrationData(userData);
     Response responseCreateAuth = apiCoreRequests
-            .makePostRequest(url, userData);
+            .makePostRequest(USER_URL, userData);
     assertResponseTextEquals(responseCreateAuth, "The value of 'username' field is too short");
     assertResponseStatusCodeEquals(responseCreateAuth, 400);
 }
@@ -105,13 +104,15 @@ public class UserRegisterTest extends BaseTestCase {
     userData.put("username", longUserName);
     userData = getRegistrationData(userData);
     Response responseCreateAuth = apiCoreRequests
-            .makePostRequest(url, userData);
+            .makePostRequest(USER_URL, userData);
     assertResponseTextEquals(responseCreateAuth, "The value of 'username' field is too long");
     assertResponseStatusCodeEquals(responseCreateAuth, 400);
  }
 
  //Short & long names but in one test (not so pretty)
- @ParameterizedTest
+
+  @ParameterizedTest
+  @Disabled
   @ValueSource(strings = {"shortName", "longName"})
   public void testNamesOutOfRange(String condition) {
    String shortUserName ="x";
@@ -120,14 +121,14 @@ public class UserRegisterTest extends BaseTestCase {
    if (condition.equals("shortName")) {
      userData.put("username", shortUserName);
      userData = getRegistrationData(userData);
-     Response responseCreateAuth = apiCoreRequests.makePostRequest(url, userData);
+     Response responseCreateAuth = apiCoreRequests.makePostRequest(USER_URL, userData);
      assertResponseTextEquals(responseCreateAuth, "The value of 'username' field is too short");
      assertResponseStatusCodeEquals(responseCreateAuth, 400);
 
    } else if (condition.equals("longName")) {
      userData.put("username", longUserName);
      userData = getRegistrationData(userData);
-     Response responseCreateAuth = apiCoreRequests.makePostRequest(url, userData);
+     Response responseCreateAuth = apiCoreRequests.makePostRequest(USER_URL, userData);
      assertResponseTextEquals(responseCreateAuth, "The value of 'username' field is too long");
      assertResponseStatusCodeEquals(responseCreateAuth, 400);
    }

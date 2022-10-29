@@ -5,49 +5,59 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 import ru.learnqa.userAPI.lib.BaseTestCase;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static ru.learnqa.userAPI.lib.Assertions.*;
 
 public class UserGetTest extends BaseTestCase {
+
   @Test
   public void testGetUserDataNotAuthenticated() {
-    Response responseUserData = RestAssured
-            .get("https://playground.learnqa.ru/api/user/2")
-            .andReturn();
+    Response responseUserData = apiCoreRequests.makeGetRequest(USER_URL + DEFAULT_USER_ID);
+
+    String[] expectedFields = {"firstName", "lastName", "email"};
+
     assertJsonHasField(responseUserData, "username");
-    assertJsonHasNotField(responseUserData, "firstName");
-    assertJsonHasNotField(responseUserData, "lastName");
-    assertJsonHasNotField(responseUserData, "email");
+    assertJsonHasNotFields(responseUserData, expectedFields);
   }
 
   @Test
   public void testGetUserDataAuthAsSameUser() {
-    Map<String, String> authData = new HashMap<>();
-    authData.put("email", "vinkotov@example.com");
-    authData.put("password", "1234");
+    Map<String, String> authData = loginAsDefaultUser();
 
-    Response responseGetAuth = RestAssured
-            .given()
-            .body(authData)
-            .post("https://playground.learnqa.ru/api/user/login")
-            .andReturn();
-
-    String authCookie = getCookie(responseGetAuth,"auth_sid");
-    String authHeader = getHeader(responseGetAuth, "x-csrf-token");
+    String[] expectedFields = {"username", "firstName", "lastName", "email"};
 
     Response responseUserData = RestAssured
             .given()
-            .header("x-csrf-token", authHeader)
-            .cookie("auth_sid", authCookie)
-            .get("https://playground.learnqa.ru/api/user/2")
+            .cookie("auth_sid", authData.get("authCookie"))
+            .header("x-csrf-token", authData.get("authToken"))
+            .get(USER_URL + DEFAULT_USER_ID)
             .andReturn();
 
-    String[] expectedFields = {"username", "firstName", "lastName", "email"};
     assertJsonHasFields(responseUserData, expectedFields);
+  }
 
 
+  // Можно было бы создавать юзера и брать его по айдишнику, но я пользуюсь тем, что есть фиксированные юзеры )
+  @Test
+  public void testGetUserDataAsDifferentUser() {
+
+//    ArrayList<String> authData = loginAsDefaultUser();
+    Map<String, String> authData = loginAsDefaultUser();
+
+    String[] expectedFields = {"firstName", "lastName", "email"};
+
+    Response responseUserData = RestAssured
+            .given()
+//            .cookie("auth_sid", authData.get(0))
+            .cookie("auth_sid", authData.get("authCookie"))
+//            .header("x-csrf-token", authData.get(1))            .cookie("auth_sid", authData.get(0))
+            .header("x-csrf-token", authData.get("authToken"))
+            .get(USER_URL + "1")
+            .andReturn();
+
+    assertJsonHasField(responseUserData, "username");
+    assertJsonHasNotFields(responseUserData, expectedFields);
   }
 
 
