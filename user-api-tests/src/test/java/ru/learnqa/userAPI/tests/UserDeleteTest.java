@@ -4,11 +4,11 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 import ru.learnqa.userAPI.lib.BaseTestCase;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 import static ru.learnqa.userAPI.lib.Assertions.assertResponseStatusCodeEquals;
 import static ru.learnqa.userAPI.lib.Assertions.assertResponseTextEquals;
+import static ru.learnqa.userAPI.utility.Constants.*;
 
 public class UserDeleteTest extends BaseTestCase {
 
@@ -23,7 +23,7 @@ public class UserDeleteTest extends BaseTestCase {
 //            .delete("https://playground.learnqa.ru/api/user/2" )
 //            .andReturn();
     Response responseDelete = apiCoreRequests.makeDeleteRequest(
-            USER_URL + DEFAULT_USER_ID,
+            URL_USER + DEFAULT_USER_ID,
             authData.get("authToken"),
             authData.get("authCookie"));
     assertResponseTextEquals(responseDelete, "Please, do not delete test users with ID 1, 2, 3, 4 or 5.");
@@ -35,13 +35,13 @@ public class UserDeleteTest extends BaseTestCase {
   }
 @Test
   public void testGetDeletedUser() {
-  ArrayList<String> userToDeleteData = createUserAndLogin();
-  apiCoreRequests.makeDeleteRequest(
-          USER_URL + userToDeleteData.get(2),
-          userToDeleteData.get(1),
-          userToDeleteData.get(0));
-
-  Response getDeletedUser = apiCoreRequests.makeGetRequest(USER_URL + userToDeleteData.get(2));
+  Map<String, String> userToDelete = createUserAndLogin();
+//  apiCoreRequests.makeDeleteRequest(
+//          URL_USER + userToDeleteData.get("userId"),
+//          userToDeleteData.get("authToken"),
+//          userToDeleteData.get("authCookie"));
+  apiCoreRequests.makeDeleteRequest(userToDelete);
+  Response getDeletedUser = apiCoreRequests.makeGetRequestWithoutAuth(URL_USER + userToDelete.get("userId"));
   System.out.println(getDeletedUser.asString());
   System.out.println(getDeletedUser.statusCode());
   assertResponseTextEquals(getDeletedUser, "User not found");
@@ -55,20 +55,20 @@ public class UserDeleteTest extends BaseTestCase {
   String userToDeleteId = createUserAndGetId();
   System.out.println("User to delete id: " + userToDeleteId);
   // createDeleter
-  ArrayList<String> userDeleterData = createUserAndLogin();
-  System.out.println("User deleter id: " + userDeleterData.get(2));
+  Map<String, String> userDeleterData = createUserAndLogin();
+  System.out.println("User deleter id: " + userDeleterData.get("userId"));
   //delete userToDelete
   apiCoreRequests.makeDeleteRequest(
-          USER_URL + userToDeleteId,
-          userDeleterData.get(1),
-          userDeleterData.get(0));
+          URL_USER + userToDeleteId,
+          userDeleterData.get("authToken"),
+          userDeleterData.get("authCookie"));
 
   //check if userToDelete was deleted
-  Response getDeletedUser = apiCoreRequests.makeGetRequest(USER_URL + userToDeleteId);
+  Response getDeletedUser = apiCoreRequests.makeGetRequestWithoutAuth(URL_USER + userToDeleteId);
   System.out.println(getDeletedUser.asString());
   System.out.println(getDeletedUser.statusCode());
-//check if deleter was deleted
-  Response getDeleter = apiCoreRequests.makeGetRequest(USER_URL + userDeleterData.get(2));
+ //check if deleter was deleted
+  Response getDeleter = apiCoreRequests.makeGetRequestWithoutAuth(URL_USER + userDeleterData.get("userId"));
   System.out.println(getDeleter.asString());
   System.out.println(getDeleter.statusCode());
 

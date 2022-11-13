@@ -6,12 +6,12 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 import ru.learnqa.userAPI.lib.BaseTestCase;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import static ru.learnqa.userAPI.lib.Assertions.*;
 import static ru.learnqa.userAPI.lib.DataGenerator.getRegistrationData;
+import static ru.learnqa.userAPI.utility.Constants.*;
 
 public class UserEditTest extends BaseTestCase {
 
@@ -23,7 +23,7 @@ public class UserEditTest extends BaseTestCase {
     JsonPath responseCreateAuth = RestAssured
             .given()
             .body(userData)
-            .post(USER_URL)
+            .post(URL_USER)
             .jsonPath();
 
     String userId = responseCreateAuth.getString("id");
@@ -36,7 +36,7 @@ public class UserEditTest extends BaseTestCase {
     Response responseGetAuth = RestAssured
             .given()
             .body(authData)
-            .post(LOGIN_URL)
+            .post(URL_LOGIN)
             .andReturn();
     System.out.println(responseGetAuth.asString());
 
@@ -50,7 +50,7 @@ public class UserEditTest extends BaseTestCase {
             .header("x-csrf-token", this.getHeader(responseGetAuth, "x-csrf-token"))
             .cookie("auth_sid", this.getCookie(responseGetAuth, "auth_sid"))
             .body(editData)
-            .put(USER_URL + userId)
+            .put(URL_USER + userId)
             .andReturn();
 
     //GET USER DATA AND COMPARE NAME WITH NEW ONE
@@ -58,22 +58,20 @@ public class UserEditTest extends BaseTestCase {
             .given()
             .header("x-csrf-token", this.getHeader(responseGetAuth, "x-csrf-token"))
             .cookie("auth_sid", this.getCookie(responseGetAuth, "auth_sid"))
-            .get("USER_URL" + userId)
+            .get(URL_USER + userId)
             .andReturn();
 
     assertJsonByName(responseUserData, "firstName", newName);
   }
 
   @Test
-  public void testGetUserDataNotAuthenticated() {
-    String userId = "2";
+  public void testEditUserDataNotAuthenticated() {
     String newName = "newName";
     Map<String, String> editData = new HashMap<>();
     editData.put("firstName", newName);
 
-    Response responseChangeUser = apiCoreRequests.makePutRequestUnauthorized(USER_URL + userId, editData);
-    System.out.println(responseChangeUser.asString());
-    System.out.println(responseChangeUser.statusCode());
+    Response responseChangeUser = apiCoreRequests.makePutRequestUnauthorized(URL_USER + createUserAndGetId(), editData);
+
     assertResponseTextEquals(responseChangeUser, "Auth token not supplied");
     assertResponseStatusCodeEquals(responseChangeUser, 400);
 
@@ -102,7 +100,7 @@ public class UserEditTest extends BaseTestCase {
             .given()
             .cookie("auth_sid", authData.get("authCookie"))
             .header("x-csrf-token", authData.get("authHeader"))
-            .put(USER_URL + userToEditId)
+            .put(URL_USER + userToEditId)
             .andReturn();
     System.out.println("user id after put: " + userToEditId);
     System.out.println(responseUserData.asString());
@@ -119,7 +117,7 @@ public class UserEditTest extends BaseTestCase {
     JsonPath responseCreateAuth = RestAssured
             .given()
             .body(userToEditData)
-            .post(USER_URL)
+            .post(URL_USER)
             .jsonPath();
 
     String userToEditId = responseCreateAuth.getString("id");
@@ -131,7 +129,7 @@ public class UserEditTest extends BaseTestCase {
     JsonPath responseCreateAuthEditor = RestAssured
             .given()
             .body(userEditorData)
-            .post(USER_URL)
+            .post(URL_USER)
             .jsonPath();
     System.out.println("userEditor json for creating: ");
     String userEditorId = responseCreateAuthEditor.getString("id");
@@ -145,7 +143,7 @@ public class UserEditTest extends BaseTestCase {
     Response responseGetAuth = RestAssured
             .given()
             .body(authData)
-            .post(LOGIN_URL)
+            .post(URL_LOGIN)
             .andReturn();
     System.out.println("logged in as editor: " + responseGetAuth.asString());
 
@@ -159,7 +157,7 @@ public class UserEditTest extends BaseTestCase {
             .header("x-csrf-token", this.getHeader(responseGetAuth, "x-csrf-token"))
             .cookie("auth_sid", this.getCookie(responseGetAuth, "auth_sid"))
             .body(editData)
-            .put(USER_URL + userToEditId)
+            .put(URL_USER + userToEditId)
             .andReturn();
     System.out.println("status code for put: " + responseEditUser.statusCode());
 
@@ -167,7 +165,7 @@ public class UserEditTest extends BaseTestCase {
     //check if usertoedit data has changed
     Response responseUserToEditData = RestAssured
             .given()
-            .get(USER_URL + userToEditId)
+            .get(URL_USER + userToEditId)
             .andReturn();
 
 //    assertJsonByName(responseUserData, "firstName", newName);
@@ -176,7 +174,7 @@ public class UserEditTest extends BaseTestCase {
 //check if editor data has changed
     Response responseUserEditorData = RestAssured
             .given()
-            .get(USER_URL + userEditorId)
+            .get(URL_USER + userEditorId)
             .andReturn();
 
 //    assertJsonByName(responseUserData, "firstName", newName);
@@ -191,22 +189,22 @@ public void testChangeUserAuthorizedAsDifferentUserVersion3() {
   String userToEditId = createUserAndGetId();
   System.out.println("User to edit id: " + userToEditId);
   // createEditor
-  ArrayList<String> userEditorData = createUserAndLogin();
-  System.out.println("User editor id: " + userEditorData.get(2));
+  Map<String, String> userEditorData = createUserAndLogin();
+  System.out.println("User editor id: " + userEditorData.get("userId"));
   //edit userToEdit
-  String newUserName = "Changed Userame";
+  String newUserName = "Changed Username";
   Map<String, String> editData = new HashMap<>();
   editData.put("username", newUserName);
 
   apiCoreRequests.makePutRequestAuthorized(
-          USER_URL + userToEditId,
+          URL_USER + userToEditId,
           editData,
-          userEditorData.get(1),
-          userEditorData.get(0));
+          userEditorData.get("authToken"),
+          userEditorData.get("authCookie"));
   //check if userToEdit data has changed
   Response responseUserEditedData = RestAssured
           .given()
-          .get(USER_URL + userToEditId)
+          .get(URL_USER + userToEditId)
           .andReturn();
   System.out.println("User edited response after put: " + responseUserEditedData.asString());
 //  assertJsonByName(responseUserEditedData, "username", newUserName);
@@ -215,7 +213,7 @@ public void testChangeUserAuthorizedAsDifferentUserVersion3() {
   //check if userEditor data has changed
   Response responseUserEditorData = RestAssured
           .given()
-          .get(USER_URL + userEditorData.get(2))
+          .get(URL_USER + userEditorData.get("userId"))
           .andReturn();
   System.out.println("User editor response after put: " + responseUserEditorData.asString());
 
@@ -225,16 +223,16 @@ public void testChangeUserAuthorizedAsDifferentUserVersion3() {
 
 @Test
   public void testUpdateUserEmailWithoutAt() {
-  ArrayList<String> userData = createUserAndLogin();
+  Map<String, String> userData = createUserAndLogin();
   String wrongEmail = "wrongEmail.com";
   Map<String, String> editData = new HashMap<>();
   editData.put("email", wrongEmail);
 
   Response responseChangeEmail = apiCoreRequests.makePutRequestAuthorized(
-          USER_URL + userData.get(2),
+          URL_USER + userData.get("userId"),
           editData,
-          userData.get(1),
-          userData.get(0));
+          userData.get("authToken"),
+          userData.get("authCookie"));
 
   assertResponseTextEquals(responseChangeEmail, "Invalid email format");
   assertResponseStatusCodeEquals(responseChangeEmail, 400);
@@ -243,16 +241,16 @@ public void testChangeUserAuthorizedAsDifferentUserVersion3() {
 
   @Test
   public void testChangeFirstNameTooShort() {
-    ArrayList<String> userData = createUserAndLogin();
+    Map<String, String> userData = createUserAndLogin();
     String shortFirstName = "a";
     Map<String, String> editData = new HashMap<>();
     editData.put("firstName", shortFirstName);
 
     Response responseChangeFirstName = apiCoreRequests.makePutRequestAuthorized(
-            USER_URL + userData.get(2),
+            URL_USER + userData.get("userId"),
             editData,
-            userData.get(1),
-            userData.get(0));
+            userData.get("authToken"),
+            userData.get("authCookie"));
     System.out.println(responseChangeFirstName.asString());
     System.out.println(responseChangeFirstName.statusCode());
 

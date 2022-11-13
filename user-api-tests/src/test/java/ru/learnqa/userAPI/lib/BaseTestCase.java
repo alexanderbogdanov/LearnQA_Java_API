@@ -13,15 +13,10 @@ import java.util.Map;
 import static org.hamcrest.Matchers.hasKey;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static ru.learnqa.userAPI.lib.DataGenerator.getRegistrationData;
+import static ru.learnqa.userAPI.utility.Constants.*;
 
 public class BaseTestCase {
   protected final ApiCoreRequests apiCoreRequests = new ApiCoreRequests();
-  protected final String BASE_URL = "https://playground.learnqa.ru/api/";
-  protected final int DEFAULT_USER_ID = 2;
-  protected final String USER_URL = "https://playground.learnqa.ru/api/user/";
-  protected final String LOGIN_URL = "https://playground.learnqa.ru/api/user/login";
-  protected final String AUTH_URL = "https://playground.learnqa.ru/api/user/auth";
-
   protected String getHeader(Response Response, String name) {
     Headers headers = Response.getHeaders();
     assertTrue(headers.hasHeaderWithName(name), "Response doesn't have header with name " + name);
@@ -39,17 +34,12 @@ public class BaseTestCase {
     return Response.jsonPath().getInt(name);
   }
 
-
   protected Map<String, String> loginAsDefaultUser() {
-    Map<String, String> defaultUserCreds = new HashMap<>();
-    defaultUserCreds.put("email", "vinkotov@example.com");
-    defaultUserCreds.put("password", "1234");
+    Map<String, String> userData = new HashMap<>();
+    userData.put("email", DEFAULT_USER_EMAIL);
+    userData.put("password", DEFAULT_USER_PASSWORD);
 
-    Response responseGetAuth = RestAssured
-            .given()
-            .body(defaultUserCreds)
-            .post("https://playground.learnqa.ru/api/user/login")
-            .andReturn();
+    Response responseGetAuth = apiCoreRequests.makePostRequest(URL_LOGIN, userData);
     Map<String, String> authData = new HashMap<>();
     String authCookie = getCookie(responseGetAuth,"auth_sid");
     String authToken = getHeader(responseGetAuth, "x-csrf-token");
@@ -64,33 +54,21 @@ public class BaseTestCase {
     JsonPath responseCreateAuth = RestAssured
             .given()
             .body(userData)
-            .post("https://playground.learnqa.ru/api/user")
+            .post(URL_USER)
             .jsonPath();
 //    responseCreateAuth.prettyPrint();
     return responseCreateAuth.getString("id");
   }
 
-  protected ArrayList<String> createUserAndGetAuthData() {
-    Map<String, String> userData = getRegistrationData();
-    Response responseCreateAuth = RestAssured
-            .given()
-            .body(userData)
-            .post("https://playground.learnqa.ru/api/user")
-            .andReturn();
-    String authCookie = getCookie(responseCreateAuth,"auth_sid");
-    String authHeader = getHeader(responseCreateAuth, "x-csrf-token");
-    System.out.println(responseCreateAuth.asString());
-    return new ArrayList<>(
-            List.of(authCookie, authHeader));
-//    return responseCreateAuth.getString("id");
-  }
 
-  protected ArrayList<String> createUserAndLogin() {
+
+  protected  Map<String, String> createUserAndLogin() {
     Map<String, String> userData = getRegistrationData();
+    Map<String, String> userAuthData = new HashMap<>();
     JsonPath responseCreateUser = RestAssured
             .given()
             .body(userData)
-            .post("https://playground.learnqa.ru/api/user")
+            .post(URL_USER)
             .jsonPath();
     String userId = responseCreateUser.getString("id");
     Map<String, String> authData = new HashMap<>();
@@ -99,12 +77,14 @@ public class BaseTestCase {
     Response responseGetAuth = RestAssured
             .given()
             .body(authData)
-            .post("https://playground.learnqa.ru/api/user/login")
+            .post(URL_LOGIN)
             .andReturn();
     String authCookie = getCookie(responseGetAuth,"auth_sid");
     String authHeader = getHeader(responseGetAuth, "x-csrf-token");
 //    System.out.println("cookie: " + authCookie + " header: " + authHeader);
-    return new ArrayList<>(
-            List.of(authCookie, authHeader, userId));
+    userAuthData.put("authCookie", authCookie);
+    userAuthData.put("authToken", authHeader);
+    userAuthData.put("userId", userId);
+    return userAuthData;
   }
 }

@@ -8,12 +8,14 @@ import io.restassured.response.Response;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
+import static ru.learnqa.userAPI.utility.Constants.URL_USER;
 
 public class ApiCoreRequests {
   @Step("Make a GET-request w/o params")
-  public Response makeGetRequest(String url) {
+  public Response makeGetRequestWithoutAuth(String url) {
     return given()
             .filter(new AllureRestAssured())
+            .when().log().method().log().uri()
             .get(url)
             .andReturn();
   }
@@ -69,7 +71,7 @@ public class ApiCoreRequests {
   }
 
 
-  @Step("Make a PUT-request")
+  @Step("Make a PUT-request without auth data")
   public Response makePutRequestUnauthorized(String url, Map<String, String> editData)  {
     return given()
             .filter(new AllureRestAssured())
@@ -84,6 +86,16 @@ public class ApiCoreRequests {
             .header(new Header("x-csrf-token", token))
             .cookie("auth_sid", cookie)
             .delete(url)
+            .andReturn();
+  }
+
+  @Step("Make a DELETE-request with id")
+  public void makeDeleteRequest(Map<String, String> userData) {
+    given()
+            .filter(new AllureRestAssured())
+            .header(new Header("x-csrf-token", userData.get("authToken")))
+            .cookie("auth_sid", userData.get("authCookie"))
+            .delete(URL_USER + userData.get("userId"))
             .andReturn();
   }
 
